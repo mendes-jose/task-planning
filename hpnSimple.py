@@ -1,6 +1,4 @@
 from collections import deque
-import os
-import time
 
 class FluentA(object):
 	def __init__(self, value):
