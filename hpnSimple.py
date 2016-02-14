@@ -92,6 +92,7 @@ class Agent(object):
 
 		childrenPI = list()
 #		print '\n\nFATHER\n', preImage, '\n\n'
+		random.shuffle(self._operators)
 		for op in self._operators:
 
 			childPreImage = list()
@@ -122,9 +123,9 @@ class Agent(object):
 		# print '\n\n CHILD \n', childrenPI ,'\n\n'
 		return childrenPI
 
-	def _plan(self, bnow, abstLevel):
+	def _plan(self, bnow, goal, abstLevel):
 
-		root = self._goal
+		root = goal
 		searchedLeaf = bnow
 
 		if all([f.holdsIn(searchedLeaf) for f in root]):
@@ -172,7 +173,7 @@ class Agent(object):
 		print '\nGOAL:\n', goal, '\n'
 		#print abstLevel
 
-		p = self._plan(bnow, abstLevel) # updates
+		p = self._plan(bnow, goal, abstLevel) # updates
 
 		print '\n\nPLAN ( abs=', abstLevel, '):\n', p, '\n\n'
 

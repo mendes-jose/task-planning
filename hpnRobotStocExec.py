@@ -156,6 +156,25 @@ class Agent(object):
 			
 			cntr += 1
 
+		# save tree in DOT format
+		file = open('./mygraph.dot', 'w')
+		file.write('digraph planningTree {\n')
+		file.write('\tr0 [label="' + '^\\n'.join([type(f).__name__ for f in root]) + '", shape=box];\n')
+		fid = 0
+		cntr = 1
+		fName = 'r0'
+
+		while cntr < len(tree):
+			if tree[cntr][1] != fid:
+				fName = 'r' + str(tree[cntr][1])
+				fid = tree[cntr][1]
+				continue
+			file.write('\tr' + str(cntr) + ' [label="' + '^\\n'.join([type(f).__name__ for f in tree[cntr][0][1]]) + '", shape=box];\n')
+			file.write('\tr' + str(cntr) + ' -> ' + fName + ' [label="' + type(tree[cntr][0][0]).__name__ + '"];\n')
+			cntr += 1
+		file.write('}')
+		file.close()
+
 		# get solution path from tree
 		plan = list()
 		idx = len(tree)-1
@@ -228,27 +247,27 @@ class WorldSim(object):
 			#TODO
 			if not eff.holdsIn(self.bnow):
 				if type(eff) == FluentA:
-					if random.uniform(0, 1) < 0.6:
+					if random.uniform(0, 1) < 0.8:
 						self.bnow['A'] = eff.value
 					else:
 						self.bnow[random.choice('BCDE')] = random.choice([True, False])
 				elif type(eff) == FluentB:
-					if random.uniform(0, 1) < 0.6:
+					if random.uniform(0, 1) < 0.8:
 						self.bnow['B'] = eff.value
 					else:
 						self.bnow[random.choice('ACDE')] = random.choice([True, False])
 				elif type(eff) == FluentC:
-					if random.uniform(0, 1) < 0.6:
+					if random.uniform(0, 1) < 0.8:
 						self.bnow['C'] = eff.value
 					else:
 						self.bnow[random.choice('ABDE')] = random.choice([True, False])
 				elif type(eff) == FluentD:
-					if random.uniform(0, 1) < 0.6:
+					if random.uniform(0, 1) < 0.8:
 						self.bnow['D'] = eff.value
 					else:
 						self.bnow[random.choice('ABCE')] = random.choice([True, False])
 				elif type(eff) == FluentE:
-					if random.uniform(0, 1) < 0.6:
+					if random.uniform(0, 1) < 0.8:
 						self.bnow['E'] = eff.value
 					else:
 						self.bnow[random.choice('ABCD')] = random.choice([True, False])

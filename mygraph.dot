@@ -1,0 +1,19 @@
+digraph planningTree {
+	r0 [label="FluentD^\nFluentE", shape=box];
+	r1 [label="FluentD^\nFluentE^\nFluentB", shape=box];
+	r1 -> r0 [label="Op3"];
+	r2 [label="FluentE^\nFluentA", shape=box];
+	r2 -> r0 [label="Op1"];
+	r3 [label="FluentD^\nFluentC", shape=box];
+	r3 -> r0 [label="Op2"];
+	r4 [label="FluentE^\nFluentB^\nFluentA", shape=box];
+	r4 -> r1 [label="Op1"];
+	r5 [label="FluentD^\nFluentE^\nFluentB", shape=box];
+	r5 -> r1 [label="Op3"];
+	r6 [label="FluentD^\nFluentB^\nFluentC", shape=box];
+	r6 -> r1 [label="Op2"];
+	r7 [label="FluentA^\nFluentC", shape=box];
+	r7 -> r2 [label="Op2"];
+	r8 [label="FluentE^\nFluentB", shape=box];
+	r8 -> r2 [label="Op3"];
+}
