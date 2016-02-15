@@ -1,4 +1,5 @@
 import random
+import pygraphviz as pgv
 from collections import deque
 
 class FluentA(object):
@@ -172,15 +173,22 @@ class Agent(object):
 			file.write('\tr' + str(cntr) + ' [label="' + '^\\n'.join([type(f).__name__ for f in tree[cntr][0][1]]) + '", shape=box];\n')
 			file.write('\tr' + str(cntr) + ' -> ' + fName + ' [label="' + type(tree[cntr][0][0]).__name__ + '"];\n')
 			cntr += 1
-		file.write('}')
-		file.close()
 
 		# get solution path from tree
 		plan = list()
 		idx = len(tree)-1
 		while idx > 0:
 			plan.append(tree[idx][0])
+#			file.write('\tr' + str(idx) + ' -> ' + 'r' + str(tree[idx][1]) + ' [color=red, label="' + type(tree[idx][0][0]).__name__ + '"];\n')
+			file.write('\tr' + str(idx) + '[color = red];\n')
 			idx = tree[idx][1]
+
+
+		file.write('}')
+		file.close()
+		G = pgv.AGraph("./mygraph.dot")
+		G.layout(prog='dot')
+		G.draw('mygraph.png')
 
 		return plan
 
@@ -226,6 +234,8 @@ class Agent(object):
 
 	def _bHPNTOp(self):
 		bnow = self._world.bnow
+		file = open('./hpngraph.dot', 'w')
+		file.write('digraph hpnTree {\n')
 		while not all([f.holdsIn(bnow) for f in self._goal]):
 			bnow = self._bHPN(bnow, self._goal, 0)
 
