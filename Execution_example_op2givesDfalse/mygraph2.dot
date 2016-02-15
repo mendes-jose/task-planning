@@ -1,0 +1,10 @@
+digraph planningTree {
+	r0 [label="GOAL\nFluentD^\nFluentC", shape=box, color=red];
+	r1 [label="FluentD^\nFluentC", shape=box];
+	r1 -> r0 [label="Op2_1"];
+	r2 [label="FluentC^\nFluentA", shape=box];
+	r2 -> r0 [label="Op1_1"];
+	r2[color = green];
+	bnow [shape=box, color=blue, label="b_{now} = {'A': True, 'C': True, 'B': True, 'D': False}"];
+	bnow -> r2 [label="in"];
+}

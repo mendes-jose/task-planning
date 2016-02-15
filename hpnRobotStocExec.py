@@ -189,7 +189,7 @@ class Agent(object):
 			idx = tree[idx][1]
 
 		file.write('\tbnow [shape=box, color=blue, label="b_{now} = ' + str(bnow) + '"];\n')
-		file.write('\tbnow -> r' + str(len(tree)-1) + ' [label="in"];\n')
+		file.write('\tbnow -> r' + str(len(tree)-1) + ' [label="in", style=dotted];\n')
 
 		file.write('}')
 		file.close()
