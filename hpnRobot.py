@@ -2,55 +2,143 @@ import random
 import pygraphviz as pgv
 from collections import deque
 
-class FluentA(object):
-	def __init__(self, value):
+###############################################################################
+# Fluents
+###############################################################################
+
+class Fluent(object):
+	""" Base class for implementing fluents. Intaces of fluents represent the subset of states such as, for each possible state in that subset, the fluent with the given arguments has value equals to the value argument
+    """
+	def __init__(self, value, **kwargs):
+		""" Class constructor
+
+		Input
+        	*value*: value of the fluent
+        	*kwargs*: dictionary of arguments
+		"""
 		self.value = value
-	def holdsIn(self, b):
-		if 'A' in [f for f in b]:
-			return b['A'] == self.value
+		""" Fluent value
+		"""
+		self.kwargs = kwargs
+		""" Dictionary of arguments
+		"""
+		self._argsDic = kwargs
+
+	def _loadVarArgs(self, b, **kwargs):
+		""" Method for loading variable arguments
+		"""
+		self._argsDic = self.kwargs
+		for k, v in kwargs.iteritems():
+			self._argsDic[k] = v
+
+class In(Fluent):
+	""" In(obj, R) fluent
+	"""
+	def holdsIn(self, b, **kwargs):
+		""" T(In, b, obj, R)
+		"""
+
+		Fluent._loadVarArgs(self, b, kwargs)
+
+		# check if the object passed as arg is in know in b
+		if not self._argsDic['obj'] in b:
+			return False
+
+		if b[self._argsDic['obj']].isIn(self._argsDic['reg'])
+			return True
 		else:
 			return False
 
-class FluentB(object):
-	def __init__(self, value):
-		self.value = value
-	def holdsIn(self, b):
-		if 'B' in [f for f in b]:
-			return b['B'] == self.value
-		else:
+class Overlaps(Fluent):
+	""" Overlaps(obj, R) fluent
+	"""
+	def holdsIn(self, b, **kwargs):
+		""" T(Overlaps, b, obj, R)
+		"""
+
+		Fluent._loadVarArgs(self, b, kwargs)
+
+		# check if the object passed as arg is in know in b
+		if not self._argsDic['obj'] in b:
 			return False
 
-class FluentC(object):
-	def __init__(self, value):
-		self.value = value
-	def holdsIn(self, b):
-		if 'C' in [f for f in b]:
-			return b['C'] == self.value
-		else:
-			return False
+		return True if b[self._argsDic['obj']].overlaps(self._argsDic['reg']) else False
 
-class FluentD(object):
-	def __init__(self, value):
-		self.value = value
-	def holdsIn(self, b):
-		if 'D' in [f for f in b]:
-			return b['D'] == self.value
-		else:
-			return False
+class Clear(Fluent):
+	""" Clear(R, objs) fluent
+	"""
+	def holdsIn(self, b, **kwargs):
+		""" T(Clear, b, R, objs)
+		"""
+		Fluent._loadVarArgs(self, b, kwargs)
 
-class FluentE(object):
-	def __init__(self, value):
-		self.value = value
-	def holdsIn(self, b):
-		if 'E' in [f for f in b]:
-			return b['E'] == self.value
-		else:
-			return False
+		knownObjs = [v for k, v in b.iteritems() if type(v) == type(Object())]
 
-class Pre(object):
-	def __init__(self, fluent, abstLevel):
-		self.fluent = fluent
-		self.abstLevel = abstLevel
+		boolArr = [obj.overalps(self._argsDic['reg']) for obj in knownObjs if obj not in self._argsDic['listObjs']]
+
+		return False if any(boolArr) else True
+
+class Holding(Fluent):
+	""" Holding(obj) fluent
+	"""
+	def holdsIn(self, b, **kwargs):
+		""" T(Holding, b, obj)
+		"""
+		Fluent._loadVarArgs(self, b, kwargs)
+
+		return True if b['g'] == self._argsDic['obj'] else False
+
+###############################################################################
+# Objects
+###############################################################################
+
+class RecObject(object):
+	""" Rectangular representation of a object
+	"""
+	def __init__(self, length=0.2, width=0.1, x=0.1, y=0.05, theta=2):
+		""" Class constructor
+
+		Input
+			*length*: object length
+			*width*: object width
+			*x*: object x position
+			*y*: object y position
+			*theta*: object orientation
+		"""
+		self.w = width
+		""" width
+		"""
+		self.l = length
+		""" length
+		"""
+		self.x = x
+		""" x
+		"""
+		self.y = y
+		""" y
+		"""
+		self.t = theta
+		""" theta
+		"""
+
+	def isIn(self, reg):
+		""" Return true if the object is entirely inside the region *reg*
+		"""
+
+	def overlaps(self, reg):
+		"""
+		"""
+
+###############################################################################
+# Operators
+###############################################################################
+
+class Operator(object):
+	def __init__(self):
+
+
+class Pick(object):
+	def __
 
 class Op1(object):
 	def __init__(self):
@@ -84,16 +172,55 @@ class Op3(object):
 #		self.effect = [FluentA(False)]
 #		self.pre = [Pre(FluentB(True), 0)]
 #
+
+class Robot(Agent):
+	""" Representation of the robot
+	"""
+	def __init__(self, world, goal, operators, length=0.5, width=0.5, x=0.25, y=0.25, theta=2, gripper=None):
+		""" Class constructor
+
+		Input
+			*world*: where operations take place and observations come from
+			*goal*: agent's goal
+			*operators*: agent's operators
+			*length*: robot length
+			*width*: robot width
+			*x*: robot x position
+			*y*: robot y position
+			*theta*: robot orientation
+			*gripper*: robot gripper
+		"""
+		Agent.__init__(self, world, goal, operators)
+
+		self.w = width
+		self.l = length
+		self.x = x
+		self.y = y
+		self.t = theta
+		self.gripper = gripper
+
+#class Pre(object):
+#	def __init__(self, fluent, abstLevel):
+#		self.fluent = fluent
+#		self.abstLevel = abstLevel
 class Agent(object):
-	def __init__(self, world, goal):
-		self._operators = [Op1(), Op2(), Op3()]
+	""" Agent, the decision maker class
+	"""
+	def __init__(self, world, goal, operators):
+		""" Class constructor
+
+		Input
+			*world*: where operations take place and observations come from
+			*goal*: agent's goal
+			*operators*: agent's operators
+		"""
+		self._operators = operators
 		self._goal = goal
 		self._world = world
 		self._planCounter = 0
-		#self._hpnCounter = -1
 		self._execCounter = 0
-		self._file = open('./hpngraph.dot', 'w')
-		self._file.write('digraph hpnTree {\n')
+		self._file = open('./execGraph.dot', 'w')
+		self._file.write('digraph execTree {\n')
 		
 
 	def _visit(self, preImage, searchedLeaf, abstLevel):
@@ -163,7 +290,7 @@ class Agent(object):
 			cntr += 1
 
 		# save tree in DOT format
-		file = open('./mygraph' + str(self._planCounter) + '.dot', 'w')
+		file = open('./planningGraph' + str(self._planCounter) + '.dot', 'w')
 		file.write('digraph planningTree {\n')
 		file.write('\tr0 [label="GOAL\n' + '^\\n'.join([type(f).__name__ for f in root]) + '", shape=box, color=red];\n')
 		fid = 0
@@ -184,7 +311,6 @@ class Agent(object):
 		idx = len(tree)-1
 		while idx > 0:
 			plan.append(tree[idx][0])
-#			file.write('\tr' + str(idx) + ' -> ' + 'r' + str(tree[idx][1]) + ' [color=red, label="' + type(tree[idx][0][0]).__name__ + '"];\n')
 			file.write('\tr' + str(idx) + '[color = green];\n')
 			idx = tree[idx][1]
 
@@ -193,9 +319,9 @@ class Agent(object):
 
 		file.write('}')
 		file.close()
-		G = pgv.AGraph('./mygraph' + str(self._planCounter) + '.dot')
+		G = pgv.AGraph('./planningGraph' + str(self._planCounter) + '.dot')
 		G.layout(prog='dot')
-		G.draw('mygraph' + str(self._planCounter) + '.png')
+		G.draw('planningGraph' + str(self._planCounter) + '.png')
 
 		self._planCounter += 1
 

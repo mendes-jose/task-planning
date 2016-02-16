@@ -1,20 +1,22 @@
 digraph planningTree {
 	r0 [label="GOAL
 FluentD^\nFluentE", shape=box, color=red];
-	r1 [label="FluentE", shape=box];
-	r1 -> r0 [label="Op1_0"];
-	r2 [label="FluentD^\nFluentE^\nFluentB", shape=box];
-	r2 -> r0 [label="Op3_0"];
+	r1 [label="FluentD^\nFluentE^\nFluentB", shape=box];
+	r1 -> r0 [label="Op3_0"];
+	r2 [label="FluentE", shape=box];
+	r2 -> r0 [label="Op1_0"];
 	r3 [label="FluentD^\nFluentC", shape=box];
 	r3 -> r0 [label="Op2_0"];
 	r4 [label="FluentE^\nFluentB", shape=box];
-	r4 -> r1 [label="Op3_0"];
-	r5 [label="FluentE", shape=box];
-	r5 -> r1 [label="Op1_0"];
-	r6 [label="FluentC", shape=box];
+	r4 -> r1 [label="Op1_0"];
+	r5 [label="FluentD^\nFluentE^\nFluentB", shape=box];
+	r5 -> r1 [label="Op3_0"];
+	r6 [label="FluentD^\nFluentB^\nFluentC", shape=box];
 	r6 -> r1 [label="Op2_0"];
-	r6[color = green];
-	r1[color = green];
+	r7 [label="FluentC", shape=box];
+	r7 -> r2 [label="Op2_0"];
+	r7[color = green];
+	r2[color = green];
 	bnow [shape=box, color=blue, label="b_{now} = {'C': True, 'B': True, 'D': False}"];
-	bnow -> r6 [label="in", style=dotted];
+	bnow -> r7 [label="in", style=dotted];
 }

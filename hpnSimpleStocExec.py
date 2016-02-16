@@ -1,4 +1,5 @@
 import random
+import pygraphviz as pgv
 from collections import deque
 
 class FluentA(object):
@@ -88,6 +89,12 @@ class Agent(object):
 		self._operators = [Op1(), Op2(), Op3()]
 		self._goal = goal
 		self._world = world
+		self._planCounter = 0
+		#self._hpnCounter = -1
+		self._execCounter = 0
+		self._file = open('./hpngraph.dot', 'w')
+		self._file.write('digraph hpnTree {\n')
+		
 
 	def _visit(self, preImage, searchedLeaf, abstLevel):
 
@@ -121,7 +128,6 @@ class Agent(object):
 						childPreImage.append(precond.fluent)
 
 			childrenPI.append([op, childPreImage])
-		# print '\n\n CHILD \n', childrenPI ,'\n\n'
 		return childrenPI
 
 	def _plan(self, bnow, goal, abstLevel):
@@ -156,12 +162,42 @@ class Agent(object):
 			
 			cntr += 1
 
+		# save tree in DOT format
+		file = open('./mygraph' + str(self._planCounter) + '.dot', 'w')
+		file.write('digraph planningTree {\n')
+		file.write('\tr0 [label="GOAL\n' + '^\\n'.join([type(f).__name__ for f in root]) + '", shape=box, color=red];\n')
+		fid = 0
+		cntr = 1
+		fName = 'r0'
+
+		while cntr < len(tree):
+			if tree[cntr][1] != fid:
+				fName = 'r' + str(tree[cntr][1])
+				fid = tree[cntr][1]
+				continue
+			file.write('\tr' + str(cntr) + ' [label="' + '^\\n'.join([type(f).__name__ for f in tree[cntr][0][1]]) + '", shape=box];\n')
+			file.write('\tr' + str(cntr) + ' -> ' + fName + ' [label="' + type(tree[cntr][0][0]).__name__ + '_' + str(abstLevel) + '"];\n')
+			cntr += 1
+
 		# get solution path from tree
 		plan = list()
 		idx = len(tree)-1
 		while idx > 0:
 			plan.append(tree[idx][0])
+#			file.write('\tr' + str(idx) + ' -> ' + 'r' + str(tree[idx][1]) + ' [color=red, label="' + type(tree[idx][0][0]).__name__ + '"];\n')
+			file.write('\tr' + str(idx) + '[color = green];\n')
 			idx = tree[idx][1]
+
+		file.write('\tbnow [shape=box, color=blue, label="b_{now} = ' + str(bnow) + '"];\n')
+		file.write('\tbnow -> r' + str(len(tree)-1) + ' [label="in", style=dotted];\n')
+
+		file.write('}')
+		file.close()
+		G = pgv.AGraph('./mygraph' + str(self._planCounter) + '.dot')
+		G.layout(prog='dot')
+		G.draw('mygraph' + str(self._planCounter) + '.png')
+
+		self._planCounter += 1
 
 		return plan
 
@@ -196,8 +232,14 @@ class Agent(object):
 				#bnow.update(p[index][0], obs)
 				# SIMPLIFING:
 				bnow = self._world.execute(p[index][0])
+				self._execCounter += 1
+				self._file.write('\tb_' +str(self._execCounter) + ' [label="b = ' + str(bnow) + '", shape=box, color=blue]\n')
+				self._file.write('\tb_' + str(self._execCounter-1) + ' -> ' +
+					'b_' + str(self._execCounter) + '[label="' + type(p[index][0]).__name__ + '"]\n' )
+				
 			else:
 				newGoal = goal if index+1 >= len(p) else p[index+1][1]
+				#self._hpnCounter += 1
 				bnow = self._bHPN(bnow, newGoal, self._nextLevel(abstLevel, p[index][0]))
 
 			if all([f.holdsIn(bnow) for f in goal]):
@@ -207,11 +249,18 @@ class Agent(object):
 
 	def _bHPNTOp(self):
 		bnow = self._world.bnow
+		self._file.write('\tb_0 [label="b = ' + str(bnow) + '", shape=box, color=blue]\n')
 		while not all([f.holdsIn(bnow) for f in self._goal]):
+			#self._hpnCounter += 1
 			bnow = self._bHPN(bnow, self._goal, 0)
 
 	def go(self):
 		self._bHPNTOp()
+		self._file.write('}')
+		self._file.close()
+		G = pgv.AGraph('./hpngraph.dot')
+		G.layout(prog='dot')
+		G.draw('hpngraph.png')
 
 
 
@@ -228,27 +277,27 @@ class WorldSim(object):
 			#TODO
 			if not eff.holdsIn(self.bnow):
 				if type(eff) == FluentA:
-					if random.uniform(0, 1) < 0.6:
+					if random.uniform(0, 1) < 0.8:
 						self.bnow['A'] = eff.value
 					else:
 						self.bnow[random.choice('BCDE')] = random.choice([True, False])
 				elif type(eff) == FluentB:
-					if random.uniform(0, 1) < 0.6:
+					if random.uniform(0, 1) < 0.8:
 						self.bnow['B'] = eff.value
 					else:
 						self.bnow[random.choice('ACDE')] = random.choice([True, False])
 				elif type(eff) == FluentC:
-					if random.uniform(0, 1) < 0.6:
+					if random.uniform(0, 1) < 0.8:
 						self.bnow['C'] = eff.value
 					else:
 						self.bnow[random.choice('ABDE')] = random.choice([True, False])
 				elif type(eff) == FluentD:
-					if random.uniform(0, 1) < 0.6:
+					if random.uniform(0, 1) < 0.8:
 						self.bnow['D'] = eff.value
 					else:
 						self.bnow[random.choice('ABCE')] = random.choice([True, False])
 				elif type(eff) == FluentE:
-					if random.uniform(0, 1) < 0.6:
+					if random.uniform(0, 1) < 0.8:
 						self.bnow['E'] = eff.value
 					else:
 						self.bnow[random.choice('ABCD')] = random.choice([True, False])
