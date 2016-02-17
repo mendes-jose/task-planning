@@ -3,15 +3,21 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Task planning using HPN in belief space's documentation!
+Welcome to Task Planning with HPN in belief space's documentation!
 ===================================================================
 
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 15
 
+   Task Planning with HPN in belief space
 
+Depedencies:
+
+- Python 2.7
+- Matlibplot 1.4.3
+- Pygraphviz 1.2
 
 Indices and tables
 ==================

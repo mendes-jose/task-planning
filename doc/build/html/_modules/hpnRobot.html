@@ -1,0 +1,587 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>hpnRobot &mdash; Task planning using HPN in belief space 1.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Task planning using HPN in belief space 1.0.1 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Task planning using HPN in belief space 1.0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for hpnRobot</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">pygraphviz</span> <span class="kn">as</span> <span class="nn">pgv</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">deque</span>
+
+<span class="c1">###############################################################################</span>
+<span class="c1"># Fluents</span>
+<span class="c1">###############################################################################</span>
+
+<span class="k">class</span> <span class="nc">FluentA</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+	<span class="k">def</span> <span class="nf">holdsIn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+		<span class="k">if</span> <span class="s1">&#39;A&#39;</span> <span class="ow">in</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">b</span><span class="p">]:</span>
+			<span class="k">return</span> <span class="n">b</span><span class="p">[</span><span class="s1">&#39;A&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">return</span> <span class="bp">False</span>
+
+<span class="k">class</span> <span class="nc">FluentB</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+	<span class="k">def</span> <span class="nf">holdsIn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+		<span class="k">if</span> <span class="s1">&#39;B&#39;</span> <span class="ow">in</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">b</span><span class="p">]:</span>
+			<span class="k">return</span> <span class="n">b</span><span class="p">[</span><span class="s1">&#39;B&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">return</span> <span class="bp">False</span>
+
+<span class="k">class</span> <span class="nc">FluentC</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+	<span class="k">def</span> <span class="nf">holdsIn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+		<span class="k">if</span> <span class="s1">&#39;C&#39;</span> <span class="ow">in</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">b</span><span class="p">]:</span>
+			<span class="k">return</span> <span class="n">b</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">return</span> <span class="bp">False</span>
+
+<span class="k">class</span> <span class="nc">FluentD</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+	<span class="k">def</span> <span class="nf">holdsIn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+		<span class="k">if</span> <span class="s1">&#39;D&#39;</span> <span class="ow">in</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">b</span><span class="p">]:</span>
+			<span class="k">return</span> <span class="n">b</span><span class="p">[</span><span class="s1">&#39;D&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">return</span> <span class="bp">False</span>
+
+<span class="k">class</span> <span class="nc">FluentE</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+	<span class="k">def</span> <span class="nf">holdsIn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+		<span class="k">if</span> <span class="s1">&#39;E&#39;</span> <span class="ow">in</span> <span class="p">[</span><span class="n">f</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">b</span><span class="p">]:</span>
+			<span class="k">return</span> <span class="n">b</span><span class="p">[</span><span class="s1">&#39;E&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">return</span> <span class="bp">False</span>
+
+<div class="viewcode-block" id="Fluent"><a class="viewcode-back" href="../Task planning.html#hpnRobot.Fluent">[docs]</a><span class="k">class</span> <span class="nc">Fluent</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot; Base class for implementing fluents. Intaces of fluents represent the subset of states such as, for each possible state in that subset, the fluent with the given arguments has value equals to the value argument</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Class constructor</span>
+
+<span class="sd">		Input</span>
+<span class="sd">        	*value*: value of the fluent</span>
+<span class="sd">        	*kwargs*: dictionary of arguments</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+		<span class="sd">&quot;&quot;&quot; Fluent value</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span> <span class="o">=</span> <span class="n">kwargs</span>
+		<span class="sd">&quot;&quot;&quot; Dictionary of arguments</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_argsDic</span> <span class="o">=</span> <span class="n">kwargs</span>
+
+<div class="viewcode-block" id="Fluent._loadVarArgs"><a class="viewcode-back" href="../Task planning.html#hpnRobot.Fluent._loadVarArgs">[docs]</a>	<span class="k">def</span> <span class="nf">_loadVarArgs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Method for loading variable arguments</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_argsDic</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kwargs</span>
+		<span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_argsDic</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span></div></div>
+
+<div class="viewcode-block" id="In"><a class="viewcode-back" href="../Task planning.html#hpnRobot.In">[docs]</a><span class="k">class</span> <span class="nc">In</span><span class="p">(</span><span class="n">Fluent</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot; In(obj, R) fluent</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="In.holdsIn"><a class="viewcode-back" href="../Task planning.html#hpnRobot.In.holdsIn">[docs]</a>	<span class="k">def</span> <span class="nf">holdsIn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; T(In, b, obj, R)</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="n">Fluent</span><span class="o">.</span><span class="n">_loadVarArgs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+
+		<span class="c1"># check if the object passed as arg is in know in b</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_argsDic</span><span class="p">[</span><span class="s1">&#39;obj&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">b</span><span class="p">:</span>
+			<span class="k">return</span> <span class="bp">False</span>
+
+		<span class="k">if</span> <span class="n">b</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_argsDic</span><span class="p">[</span><span class="s1">&#39;obj&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">isIn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_argsDic</span><span class="p">[</span><span class="s1">&#39;reg&#39;</span><span class="p">]):</span>
+			<span class="k">return</span> <span class="bp">True</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">return</span> <span class="bp">False</span></div></div>
+
+<div class="viewcode-block" id="Overlaps"><a class="viewcode-back" href="../Task planning.html#hpnRobot.Overlaps">[docs]</a><span class="k">class</span> <span class="nc">Overlaps</span><span class="p">(</span><span class="n">Fluent</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot; Overlaps(obj, R) fluent</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Overlaps.holdsIn"><a class="viewcode-back" href="../Task planning.html#hpnRobot.Overlaps.holdsIn">[docs]</a>	<span class="k">def</span> <span class="nf">holdsIn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; T(Overlaps, b, obj, R)</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+		<span class="n">Fluent</span><span class="o">.</span><span class="n">_loadVarArgs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+
+		<span class="c1"># check if the object passed as arg is in know in b</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_argsDic</span><span class="p">[</span><span class="s1">&#39;obj&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">b</span><span class="p">:</span>
+			<span class="k">return</span> <span class="bp">False</span>
+
+		<span class="k">return</span> <span class="bp">True</span> <span class="k">if</span> <span class="n">b</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_argsDic</span><span class="p">[</span><span class="s1">&#39;obj&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">overlaps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_argsDic</span><span class="p">[</span><span class="s1">&#39;reg&#39;</span><span class="p">])</span> <span class="k">else</span> <span class="bp">False</span></div></div>
+
+<div class="viewcode-block" id="Clear"><a class="viewcode-back" href="../Task planning.html#hpnRobot.Clear">[docs]</a><span class="k">class</span> <span class="nc">Clear</span><span class="p">(</span><span class="n">Fluent</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot; Clear(R, objs) fluent</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Clear.holdsIn"><a class="viewcode-back" href="../Task planning.html#hpnRobot.Clear.holdsIn">[docs]</a>	<span class="k">def</span> <span class="nf">holdsIn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; T(Clear, b, R, objs)</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">Fluent</span><span class="o">.</span><span class="n">_loadVarArgs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+
+		<span class="n">knownObjs</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">b</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">==</span> <span class="nb">type</span><span class="p">(</span><span class="n">Object</span><span class="p">())]</span>
+
+		<span class="n">boolArr</span> <span class="o">=</span> <span class="p">[</span><span class="n">obj</span><span class="o">.</span><span class="n">overalps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_argsDic</span><span class="p">[</span><span class="s1">&#39;reg&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">knownObjs</span> <span class="k">if</span> <span class="n">obj</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_argsDic</span><span class="p">[</span><span class="s1">&#39;listObjs&#39;</span><span class="p">]]</span>
+
+		<span class="k">return</span> <span class="bp">False</span> <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">boolArr</span><span class="p">)</span> <span class="k">else</span> <span class="bp">True</span></div></div>
+
+<div class="viewcode-block" id="Holding"><a class="viewcode-back" href="../Task planning.html#hpnRobot.Holding">[docs]</a><span class="k">class</span> <span class="nc">Holding</span><span class="p">(</span><span class="n">Fluent</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot; Holding(obj) fluent</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="Holding.holdsIn"><a class="viewcode-back" href="../Task planning.html#hpnRobot.Holding.holdsIn">[docs]</a>	<span class="k">def</span> <span class="nf">holdsIn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; T(Holding, b, obj)</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">Fluent</span><span class="o">.</span><span class="n">_loadVarArgs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+
+		<span class="k">return</span> <span class="bp">True</span> <span class="k">if</span> <span class="n">b</span><span class="p">[</span><span class="s1">&#39;g&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_argsDic</span><span class="p">[</span><span class="s1">&#39;obj&#39;</span><span class="p">]</span> <span class="k">else</span> <span class="bp">False</span></div></div>
+
+<span class="c1">###############################################################################</span>
+<span class="c1"># Objects</span>
+<span class="c1">###############################################################################</span>
+
+<div class="viewcode-block" id="RecObject"><a class="viewcode-back" href="../Task planning.html#hpnRobot.RecObject">[docs]</a><span class="k">class</span> <span class="nc">RecObject</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot; Rectangular representation of a object</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Class constructor</span>
+
+<span class="sd">		Input</span>
+<span class="sd">			*length*: object length</span>
+<span class="sd">			*width*: object width</span>
+<span class="sd">			*x*: object x position</span>
+<span class="sd">			*y*: object y position</span>
+<span class="sd">			*theta*: object orientation</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">w</span> <span class="o">=</span> <span class="n">width</span>
+		<span class="sd">&quot;&quot;&quot; width</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">l</span> <span class="o">=</span> <span class="n">length</span>
+		<span class="sd">&quot;&quot;&quot; length</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">x</span>
+		<span class="sd">&quot;&quot;&quot; x</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">y</span>
+		<span class="sd">&quot;&quot;&quot; y</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="n">theta</span>
+		<span class="sd">&quot;&quot;&quot; theta</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="RecObject.isIn"><a class="viewcode-back" href="../Task planning.html#hpnRobot.RecObject.isIn">[docs]</a>	<span class="k">def</span> <span class="nf">isIn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reg</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Return true if the object is entirely inside the region *reg*</span>
+<span class="sd">		&quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="RecObject.overlaps"><a class="viewcode-back" href="../Task planning.html#hpnRobot.RecObject.overlaps">[docs]</a>	<span class="k">def</span> <span class="nf">overlaps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reg</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		&quot;&quot;&quot;</span></div></div>
+
+<span class="c1">###############################################################################</span>
+<span class="c1"># Operators</span>
+<span class="c1">###############################################################################</span>
+
+<span class="c1">#class Operator(object):</span>
+<span class="c1">#	def __init__(self):</span>
+
+<span class="c1">#class Pick(object):</span>
+<span class="c1">#	def __init__(self):</span>
+
+
+<span class="k">class</span> <span class="nc">Op1</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">effect</span> <span class="o">=</span> <span class="p">[</span><span class="n">FluentD</span><span class="p">(</span><span class="bp">True</span><span class="p">)]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">pre</span> <span class="o">=</span> <span class="p">[</span><span class="n">Pre</span><span class="p">(</span><span class="n">FluentA</span><span class="p">(</span><span class="bp">True</span><span class="p">),</span> <span class="mi">1</span><span class="p">)]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_hasPrim</span> <span class="o">=</span> <span class="bp">True</span>
+
+	<span class="k">def</span> <span class="nf">isPrim</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">abstLevel</span><span class="p">):</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hasPrim</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">([</span><span class="n">p</span><span class="o">.</span><span class="n">abstLevel</span> <span class="o">&lt;=</span> <span class="n">abstLevel</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre</span><span class="p">])</span>
+
+<span class="k">class</span> <span class="nc">Op2</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">effect</span> <span class="o">=</span> <span class="p">[</span><span class="n">FluentE</span><span class="p">(</span><span class="bp">True</span><span class="p">)]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">pre</span> <span class="o">=</span> <span class="p">[</span><span class="n">Pre</span><span class="p">(</span><span class="n">FluentC</span><span class="p">(</span><span class="bp">True</span><span class="p">),</span> <span class="mi">0</span><span class="p">)]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_hasPrim</span> <span class="o">=</span> <span class="bp">True</span>
+
+	<span class="k">def</span> <span class="nf">isPrim</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">abstLevel</span><span class="p">):</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hasPrim</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">([</span><span class="n">p</span><span class="o">.</span><span class="n">abstLevel</span> <span class="o">&lt;=</span> <span class="n">abstLevel</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre</span><span class="p">])</span>
+
+<span class="k">class</span> <span class="nc">Op3</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">effect</span> <span class="o">=</span> <span class="p">[</span><span class="n">FluentA</span><span class="p">(</span><span class="bp">True</span><span class="p">)]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">pre</span> <span class="o">=</span> <span class="p">[</span><span class="n">Pre</span><span class="p">(</span><span class="n">FluentB</span><span class="p">(</span><span class="bp">True</span><span class="p">),</span> <span class="mi">0</span><span class="p">)]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_hasPrim</span> <span class="o">=</span> <span class="bp">True</span>
+
+	<span class="k">def</span> <span class="nf">isPrim</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">abstLevel</span><span class="p">):</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hasPrim</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">([</span><span class="n">p</span><span class="o">.</span><span class="n">abstLevel</span> <span class="o">&lt;=</span> <span class="n">abstLevel</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pre</span><span class="p">])</span>
+
+<span class="k">class</span> <span class="nc">Pre</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fluent</span><span class="p">,</span> <span class="n">abstLevel</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">fluent</span> <span class="o">=</span> <span class="n">fluent</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">abstLevel</span> <span class="o">=</span> <span class="n">abstLevel</span>
+
+<div class="viewcode-block" id="Agent"><a class="viewcode-back" href="../Task planning.html#hpnRobot.Agent">[docs]</a><span class="k">class</span> <span class="nc">Agent</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot; Agent, the decision maker class</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">world</span><span class="p">,</span> <span class="n">goal</span><span class="p">,</span> <span class="n">operators</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Class constructor</span>
+
+<span class="sd">		Input</span>
+<span class="sd">			*world*: where operations take place and observations come from</span>
+<span class="sd">			*goal*: agent&#39;s goal</span>
+<span class="sd">			*operators*: agent&#39;s operators</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_operators</span> <span class="o">=</span> <span class="n">operators</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_goal</span> <span class="o">=</span> <span class="n">goal</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_world</span> <span class="o">=</span> <span class="n">world</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_planCounter</span> <span class="o">=</span> <span class="mi">0</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_execCounter</span> <span class="o">=</span> <span class="mi">0</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;./execGraph.dot&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;digraph execTree {</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+		
+
+<div class="viewcode-block" id="Agent._visit"><a class="viewcode-back" href="../Task planning.html#hpnRobot.Agent._visit">[docs]</a>	<span class="k">def</span> <span class="nf">_visit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">preImage</span><span class="p">,</span> <span class="n">searchedLeaf</span><span class="p">,</span> <span class="n">abstLevel</span><span class="p">):</span>
+
+		<span class="n">childrenPI</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+<span class="c1">#		print &#39;\n\nFATHER\n&#39;, preImage, &#39;\n\n&#39;</span>
+		<span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_operators</span><span class="p">)</span>
+		<span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_operators</span><span class="p">:</span>
+
+			<span class="n">childPreImage</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+			
+<span class="c1">#			print &#39;\n\nOP\n&#39;, op, &#39;\n\n&#39;</span>
+<span class="c1">#			print &#39;\n\nOP EFFECT\n&#39;, op.effect, &#39;\n\n&#39;</span>
+<span class="c1">#			print &#39;\n\nOP PRECOND\n&#39;, [p.fluent for p in op.pre], &#39;\n\n&#39;</span>
+			<span class="k">for</span> <span class="n">f1</span> <span class="ow">in</span> <span class="n">preImage</span><span class="p">:</span>
+				<span class="n">takeF1Out</span> <span class="o">=</span> <span class="bp">False</span>
+				<span class="k">for</span> <span class="n">f2</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">effect</span><span class="p">:</span>
+					<span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">f1</span><span class="p">)</span> <span class="o">==</span> <span class="nb">type</span><span class="p">(</span><span class="n">f2</span><span class="p">):</span>
+						<span class="n">takeF1Out</span> <span class="o">=</span> <span class="bp">True</span>
+						<span class="k">break</span>
+				<span class="k">if</span> <span class="ow">not</span> <span class="n">takeF1Out</span><span class="p">:</span>
+					<span class="n">childPreImage</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f1</span><span class="p">)</span>
+
+			<span class="k">for</span> <span class="n">precond</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">pre</span><span class="p">:</span>
+				<span class="n">doNotAdd</span> <span class="o">=</span> <span class="bp">False</span>
+				<span class="k">if</span> <span class="n">precond</span><span class="o">.</span><span class="n">abstLevel</span> <span class="o">&lt;=</span> <span class="n">abstLevel</span><span class="p">:</span>
+					<span class="k">for</span> <span class="n">f3</span> <span class="ow">in</span> <span class="n">childPreImage</span><span class="p">:</span>
+						<span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">f3</span><span class="p">)</span> <span class="o">==</span> <span class="nb">type</span><span class="p">(</span><span class="n">precond</span><span class="o">.</span><span class="n">fluent</span><span class="p">):</span>
+							<span class="n">doNotAdd</span> <span class="o">=</span> <span class="bp">True</span>
+							<span class="k">break</span>
+					<span class="k">if</span> <span class="ow">not</span> <span class="n">doNotAdd</span><span class="p">:</span>
+						<span class="n">childPreImage</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">precond</span><span class="o">.</span><span class="n">fluent</span><span class="p">)</span>
+
+			<span class="n">childrenPI</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">op</span><span class="p">,</span> <span class="n">childPreImage</span><span class="p">])</span>
+		<span class="k">return</span> <span class="n">childrenPI</span></div>
+
+<div class="viewcode-block" id="Agent._plan"><a class="viewcode-back" href="../Task planning.html#hpnRobot.Agent._plan">[docs]</a>	<span class="k">def</span> <span class="nf">_plan</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bnow</span><span class="p">,</span> <span class="n">goal</span><span class="p">,</span> <span class="n">abstLevel</span><span class="p">):</span>
+
+		<span class="n">root</span> <span class="o">=</span> <span class="n">goal</span>
+		<span class="n">searchedLeaf</span> <span class="o">=</span> <span class="n">bnow</span>
+
+		<span class="k">if</span> <span class="nb">all</span><span class="p">([</span><span class="n">f</span><span class="o">.</span><span class="n">holdsIn</span><span class="p">(</span><span class="n">searchedLeaf</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">root</span><span class="p">]):</span>
+			<span class="k">return</span> <span class="p">[]</span>
+
+		<span class="n">tree</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+		<span class="n">tree</span><span class="o">.</span><span class="n">append</span><span class="p">([[</span><span class="bp">None</span><span class="p">,</span> <span class="n">root</span><span class="p">],</span> <span class="bp">None</span><span class="p">])</span>
+		<span class="n">cntr</span> <span class="o">=</span> <span class="mi">0</span>
+		<span class="n">findSearchedLeaf</span> <span class="o">=</span> <span class="bp">False</span>
+
+		<span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+
+			<span class="n">preImage</span> <span class="o">=</span> <span class="n">tree</span><span class="p">[</span><span class="n">cntr</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+			<span class="n">pImages</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_visit</span><span class="p">(</span><span class="n">preImage</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">searchedLeaf</span><span class="p">,</span> <span class="n">abstLevel</span><span class="p">)</span>
+
+			<span class="k">for</span> <span class="n">preImage</span> <span class="ow">in</span> <span class="n">pImages</span><span class="p">:</span>
+
+				<span class="n">tree</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">preImage</span><span class="p">,</span> <span class="n">cntr</span><span class="p">])</span>
+
+				<span class="k">if</span> <span class="nb">all</span><span class="p">([</span><span class="n">f</span><span class="o">.</span><span class="n">holdsIn</span><span class="p">(</span><span class="n">searchedLeaf</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">preImage</span><span class="p">[</span><span class="mi">1</span><span class="p">]]):</span>
+					<span class="n">findSearchedLeaf</span> <span class="o">=</span> <span class="bp">True</span>
+					<span class="k">break</span>
+
+			<span class="k">if</span> <span class="n">findSearchedLeaf</span><span class="p">:</span>
+				<span class="k">break</span>
+			
+			<span class="n">cntr</span> <span class="o">+=</span> <span class="mi">1</span>
+
+		<span class="c1"># save tree in DOT format</span>
+		<span class="nb">file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;./planningGraph&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_planCounter</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.dot&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+		<span class="nb">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;digraph planningTree {</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+		<span class="nb">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">r0 [label=&quot;GOAL</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="s1">&#39;^</span><span class="se">\\</span><span class="s1">n&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">type</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">__name__</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">root</span><span class="p">])</span> <span class="o">+</span> <span class="s1">&#39;&quot;, shape=box, color=red];</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+		<span class="n">fid</span> <span class="o">=</span> <span class="mi">0</span>
+		<span class="n">cntr</span> <span class="o">=</span> <span class="mi">1</span>
+		<span class="n">fName</span> <span class="o">=</span> <span class="s1">&#39;r0&#39;</span>
+
+		<span class="k">while</span> <span class="n">cntr</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">tree</span><span class="p">):</span>
+			<span class="k">if</span> <span class="n">tree</span><span class="p">[</span><span class="n">cntr</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">fid</span><span class="p">:</span>
+				<span class="n">fName</span> <span class="o">=</span> <span class="s1">&#39;r&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">tree</span><span class="p">[</span><span class="n">cntr</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+				<span class="n">fid</span> <span class="o">=</span> <span class="n">tree</span><span class="p">[</span><span class="n">cntr</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+				<span class="k">continue</span>
+			<span class="nb">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">r&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">cntr</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; [label=&quot;&#39;</span> <span class="o">+</span> <span class="s1">&#39;^</span><span class="se">\\</span><span class="s1">n&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">type</span><span class="p">(</span><span class="n">f</span><span class="p">)</span><span class="o">.</span><span class="n">__name__</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">tree</span><span class="p">[</span><span class="n">cntr</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]])</span> <span class="o">+</span> <span class="s1">&#39;&quot;, shape=box];</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+			<span class="nb">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">r&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">cntr</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; -&gt; &#39;</span> <span class="o">+</span> <span class="n">fName</span> <span class="o">+</span> <span class="s1">&#39; [label=&quot;&#39;</span> <span class="o">+</span> <span class="nb">type</span><span class="p">(</span><span class="n">tree</span><span class="p">[</span><span class="n">cntr</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">__name__</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">abstLevel</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;&quot;];</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+			<span class="n">cntr</span> <span class="o">+=</span> <span class="mi">1</span>
+
+		<span class="c1"># get solution path from tree</span>
+		<span class="n">plan</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+		<span class="n">idx</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
+		<span class="k">while</span> <span class="n">idx</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+			<span class="n">plan</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tree</span><span class="p">[</span><span class="n">idx</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+			<span class="nb">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">r&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;[color = green];</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+			<span class="n">idx</span> <span class="o">=</span> <span class="n">tree</span><span class="p">[</span><span class="n">idx</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+
+		<span class="nb">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">bnow [shape=box, color=blue, label=&quot;b_{now} = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">bnow</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;&quot;];</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+		<span class="nb">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">bnow -&gt; r&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tree</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; [label=&quot;in&quot;, style=dotted];</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+		<span class="nb">file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;}&#39;</span><span class="p">)</span>
+		<span class="nb">file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+		<span class="n">G</span> <span class="o">=</span> <span class="n">pgv</span><span class="o">.</span><span class="n">AGraph</span><span class="p">(</span><span class="s1">&#39;./planningGraph&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_planCounter</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.dot&#39;</span><span class="p">)</span>
+		<span class="n">G</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="n">prog</span><span class="o">=</span><span class="s1">&#39;dot&#39;</span><span class="p">)</span>
+		<span class="n">G</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="s1">&#39;planningGraph&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_planCounter</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.png&#39;</span><span class="p">)</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">_planCounter</span> <span class="o">+=</span> <span class="mi">1</span>
+
+		<span class="k">return</span> <span class="n">plan</span></div>
+
+<div class="viewcode-block" id="Agent._nextLevel"><a class="viewcode-back" href="../Task planning.html#hpnRobot.Agent._nextLevel">[docs]</a>	<span class="k">def</span> <span class="nf">_nextLevel</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">abstLevel</span><span class="p">,</span> <span class="n">operator</span><span class="p">):</span>
+		<span class="k">return</span> <span class="n">abstLevel</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span></div>
+
+<div class="viewcode-block" id="Agent._bHPN"><a class="viewcode-back" href="../Task planning.html#hpnRobot.Agent._bHPN">[docs]</a>	<span class="k">def</span> <span class="nf">_bHPN</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">bnow</span><span class="p">,</span> <span class="n">goal</span><span class="p">,</span> <span class="n">abstLevel</span><span class="p">):</span>
+
+		<span class="c1">#print bnow</span>
+		<span class="k">print</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">GOAL:</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">goal</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+		<span class="c1">#print abstLevel</span>
+
+		<span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_plan</span><span class="p">(</span><span class="n">bnow</span><span class="p">,</span> <span class="n">goal</span><span class="p">,</span> <span class="n">abstLevel</span><span class="p">)</span> <span class="c1"># updates</span>
+
+		<span class="k">print</span> <span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">PLAN ( abs=&#39;</span><span class="p">,</span> <span class="n">abstLevel</span><span class="p">,</span> <span class="s1">&#39;):</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n\n</span><span class="s1">&#39;</span>
+
+		<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">goal</span>
+
+		<span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+			
+			<span class="n">currBHoldingList</span> <span class="o">=</span> <span class="p">[</span><span class="nb">all</span><span class="p">([</span><span class="n">f</span><span class="o">.</span><span class="n">holdsIn</span><span class="p">(</span><span class="n">bnow</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">wg</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span> <span class="k">for</span> <span class="n">wg</span> <span class="ow">in</span> <span class="n">p</span><span class="p">]</span> <span class="c1"># while bnow is in union_{i = 0}^{n-1} g_i(p)</span>
+
+			<span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">currBHoldingList</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">True</span><span class="p">:</span>
+				<span class="k">break</span>
+
+			<span class="n">index</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">currBHoldingList</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">currBHoldingList</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+			
+			<span class="k">if</span> <span class="n">p</span><span class="p">[</span><span class="n">index</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">isPrim</span><span class="p">(</span><span class="n">abstLevel</span><span class="p">):</span>
+				<span class="k">print</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Execute:</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">p</span><span class="p">[</span><span class="n">index</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+				<span class="c1">#obs = world.execute(p[index][0])</span>
+				<span class="c1">#bnow.update(p[index][0], obs)</span>
+				<span class="c1"># SIMPLIFING:</span>
+				<span class="n">bnow</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_world</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="n">index</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_execCounter</span> <span class="o">+=</span> <span class="mi">1</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">b_&#39;</span> <span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_execCounter</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; [label=&quot;b = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">bnow</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;&quot;, shape=box, color=blue]</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">b_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_execCounter</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; -&gt; &#39;</span> <span class="o">+</span>
+					<span class="s1">&#39;b_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_execCounter</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;[label=&quot;&#39;</span> <span class="o">+</span> <span class="nb">type</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="n">index</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">__name__</span> <span class="o">+</span> <span class="s1">&#39;&quot;]</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="p">)</span>
+				
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">newGoal</span> <span class="o">=</span> <span class="n">goal</span> <span class="k">if</span> <span class="n">index</span><span class="o">+</span><span class="mi">1</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">p</span><span class="p">)</span> <span class="k">else</span> <span class="n">p</span><span class="p">[</span><span class="n">index</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+				<span class="c1">#self._hpnCounter += 1</span>
+				<span class="n">bnow</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bHPN</span><span class="p">(</span><span class="n">bnow</span><span class="p">,</span> <span class="n">newGoal</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nextLevel</span><span class="p">(</span><span class="n">abstLevel</span><span class="p">,</span> <span class="n">p</span><span class="p">[</span><span class="n">index</span><span class="p">][</span><span class="mi">0</span><span class="p">]))</span>
+
+			<span class="k">if</span> <span class="nb">all</span><span class="p">([</span><span class="n">f</span><span class="o">.</span><span class="n">holdsIn</span><span class="p">(</span><span class="n">bnow</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">goal</span><span class="p">]):</span>
+				<span class="k">break</span>
+
+		<span class="k">return</span> <span class="n">bnow</span></div>
+
+<div class="viewcode-block" id="Agent._bHPNTOp"><a class="viewcode-back" href="../Task planning.html#hpnRobot.Agent._bHPNTOp">[docs]</a>	<span class="k">def</span> <span class="nf">_bHPNTOp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="n">bnow</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_world</span><span class="o">.</span><span class="n">bnow</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">b_0 [label=&quot;b = &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">bnow</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;&quot;, shape=box, color=blue]</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+		<span class="k">while</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="n">f</span><span class="o">.</span><span class="n">holdsIn</span><span class="p">(</span><span class="n">bnow</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_goal</span><span class="p">]):</span>
+			<span class="c1">#self._hpnCounter += 1</span>
+			<span class="n">bnow</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bHPN</span><span class="p">(</span><span class="n">bnow</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_goal</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Agent.go"><a class="viewcode-back" href="../Task planning.html#hpnRobot.Agent.go">[docs]</a>	<span class="k">def</span> <span class="nf">go</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_bHPNTOp</span><span class="p">()</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;}&#39;</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+		<span class="n">G</span> <span class="o">=</span> <span class="n">pgv</span><span class="o">.</span><span class="n">AGraph</span><span class="p">(</span><span class="s1">&#39;./hpngraph.dot&#39;</span><span class="p">)</span>
+		<span class="n">G</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="n">prog</span><span class="o">=</span><span class="s1">&#39;dot&#39;</span><span class="p">)</span>
+		<span class="n">G</span><span class="o">.</span><span class="n">draw</span><span class="p">(</span><span class="s1">&#39;hpngraph.png&#39;</span><span class="p">)</span></div></div>
+
+<div class="viewcode-block" id="Robot"><a class="viewcode-back" href="../Task planning.html#hpnRobot.Robot">[docs]</a><span class="k">class</span> <span class="nc">Robot</span><span class="p">(</span><span class="n">Agent</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot; Representation of the robot</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">world</span><span class="p">,</span> <span class="n">goal</span><span class="p">,</span> <span class="n">operators</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">theta</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">gripper</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+		<span class="sd">&quot;&quot;&quot; Class constructor</span>
+
+<span class="sd">		Input</span>
+<span class="sd">			*world*: where operations take place and observations come from</span>
+<span class="sd">			*goal*: agent&#39;s goal</span>
+<span class="sd">			*operators*: agent&#39;s operators</span>
+<span class="sd">			*length*: robot length</span>
+<span class="sd">			*width*: robot width</span>
+<span class="sd">			*x*: robot x position</span>
+<span class="sd">			*y*: robot y position</span>
+<span class="sd">			*theta*: robot orientation</span>
+<span class="sd">			*gripper*: robot gripper</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="n">Agent</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">world</span><span class="p">,</span> <span class="n">goal</span><span class="p">,</span> <span class="n">operators</span><span class="p">)</span>
+
+		<span class="bp">self</span><span class="o">.</span><span class="n">w</span> <span class="o">=</span> <span class="n">width</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">l</span> <span class="o">=</span> <span class="n">length</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">x</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">y</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="n">theta</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">gripper</span> <span class="o">=</span> <span class="n">gripper</span>
+		<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		&quot;&quot;&quot;</span></div>
+
+<span class="k">class</span> <span class="nc">WorldSim</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot; This class is a container of all simulation elements and also the</span>
+<span class="sd">	interface for running the simulation.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">binit</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">bnow</span> <span class="o">=</span> <span class="n">binit</span>
+
+	<span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operator</span><span class="p">):</span>
+		<span class="k">for</span> <span class="n">eff</span> <span class="ow">in</span> <span class="n">operator</span><span class="o">.</span><span class="n">effect</span><span class="p">:</span>
+			<span class="c1">#TODO</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="n">eff</span><span class="o">.</span><span class="n">holdsIn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bnow</span><span class="p">):</span>
+				<span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">eff</span><span class="p">)</span> <span class="o">==</span> <span class="n">FluentA</span><span class="p">:</span>
+					<span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.8</span><span class="p">:</span>
+						<span class="bp">self</span><span class="o">.</span><span class="n">bnow</span><span class="p">[</span><span class="s1">&#39;A&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">eff</span><span class="o">.</span><span class="n">value</span>
+					<span class="k">else</span><span class="p">:</span>
+						<span class="bp">self</span><span class="o">.</span><span class="n">bnow</span><span class="p">[</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="s1">&#39;BCDE&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">([</span><span class="bp">True</span><span class="p">,</span> <span class="bp">False</span><span class="p">])</span>
+				<span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">eff</span><span class="p">)</span> <span class="o">==</span> <span class="n">FluentB</span><span class="p">:</span>
+					<span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.8</span><span class="p">:</span>
+						<span class="bp">self</span><span class="o">.</span><span class="n">bnow</span><span class="p">[</span><span class="s1">&#39;B&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">eff</span><span class="o">.</span><span class="n">value</span>
+					<span class="k">else</span><span class="p">:</span>
+						<span class="bp">self</span><span class="o">.</span><span class="n">bnow</span><span class="p">[</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="s1">&#39;ACDE&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">([</span><span class="bp">True</span><span class="p">,</span> <span class="bp">False</span><span class="p">])</span>
+				<span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">eff</span><span class="p">)</span> <span class="o">==</span> <span class="n">FluentC</span><span class="p">:</span>
+					<span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.8</span><span class="p">:</span>
+						<span class="bp">self</span><span class="o">.</span><span class="n">bnow</span><span class="p">[</span><span class="s1">&#39;C&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">eff</span><span class="o">.</span><span class="n">value</span>
+					<span class="k">else</span><span class="p">:</span>
+						<span class="bp">self</span><span class="o">.</span><span class="n">bnow</span><span class="p">[</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="s1">&#39;ABDE&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">([</span><span class="bp">True</span><span class="p">,</span> <span class="bp">False</span><span class="p">])</span>
+				<span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">eff</span><span class="p">)</span> <span class="o">==</span> <span class="n">FluentD</span><span class="p">:</span>
+					<span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.8</span><span class="p">:</span>
+						<span class="bp">self</span><span class="o">.</span><span class="n">bnow</span><span class="p">[</span><span class="s1">&#39;D&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">eff</span><span class="o">.</span><span class="n">value</span>
+					<span class="k">else</span><span class="p">:</span>
+						<span class="bp">self</span><span class="o">.</span><span class="n">bnow</span><span class="p">[</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="s1">&#39;ABCE&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">([</span><span class="bp">True</span><span class="p">,</span> <span class="bp">False</span><span class="p">])</span>
+				<span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">eff</span><span class="p">)</span> <span class="o">==</span> <span class="n">FluentE</span><span class="p">:</span>
+					<span class="k">if</span> <span class="n">random</span><span class="o">.</span><span class="n">uniform</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.8</span><span class="p">:</span>
+						<span class="bp">self</span><span class="o">.</span><span class="n">bnow</span><span class="p">[</span><span class="s1">&#39;E&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">eff</span><span class="o">.</span><span class="n">value</span>
+					<span class="k">else</span><span class="p">:</span>
+						<span class="bp">self</span><span class="o">.</span><span class="n">bnow</span><span class="p">[</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="s1">&#39;ABCD&#39;</span><span class="p">)]</span> <span class="o">=</span> <span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">([</span><span class="bp">True</span><span class="p">,</span> <span class="bp">False</span><span class="p">])</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bnow</span>
+
+
+<span class="c1"># MAIN ########################################################################</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+
+	<span class="n">binit</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;B&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span> <span class="s1">&#39;C&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span> <span class="s1">&#39;D&#39;</span><span class="p">:</span> <span class="bp">False</span><span class="p">}</span>
+	<span class="n">goal</span> <span class="o">=</span> <span class="p">[</span><span class="n">FluentD</span><span class="p">(</span><span class="bp">True</span><span class="p">),</span> <span class="n">FluentE</span><span class="p">(</span><span class="bp">True</span><span class="p">)]</span>
+
+	<span class="n">w</span> <span class="o">=</span> <span class="n">WorldSim</span><span class="p">(</span><span class="n">binit</span><span class="p">)</span>
+
+	<span class="n">a</span> <span class="o">=</span> <span class="n">Agent</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">goal</span><span class="p">,</span> <span class="p">[</span><span class="n">Op1</span><span class="p">(),</span> <span class="n">Op2</span><span class="p">(),</span> <span class="n">Op3</span><span class="p">()])</span>
+
+	<span class="n">a</span><span class="o">.</span><span class="n">go</span><span class="p">()</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">Task planning using HPN in belief space 1.0.1 documentation</a> &raquo;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, José M MENDES FILHO.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
+    </div>
+  </body>
+</html>

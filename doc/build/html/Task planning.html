@@ -1,0 +1,388 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>hpnRobot — Task planning simulation &mdash; Task planning using HPN in belief space 1.0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/classic.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="Task planning using HPN in belief space 1.0.1 documentation" href="index.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Task planning using HPN in belief space 1.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-hpnRobot">
+<span id="hpnrobot-task-planning-simulation"></span><h1><a class="reference internal" href="#module-hpnRobot" title="hpnRobot"><code class="xref py py-mod docutils literal"><span class="pre">hpnRobot</span></code></a> &#8212; Task planning simulation<a class="headerlink" href="#module-hpnRobot" title="Permalink to this headline">¶</a></h1>
+<p>The <a class="reference internal" href="#module-hpnRobot" title="hpnRobot"><code class="xref py py-mod docutils literal"><span class="pre">hpnRobot</span></code></a> module implements classes and functions to simulate a
+navigation scenario consisting of one or more mobile robots that autonomously plan their
+motion from an initial state to a final state avoiding static obstacles and
+other robots, and respecting kinematic (including nonhonolonomic) constraints.</p>
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<hr class="docutils" />
+<dl class="class">
+<dt id="hpnRobot.Fluent">
+<em class="property">class </em><code class="descclassname">hpnRobot.</code><code class="descname">Fluent</code><span class="sig-paren">(</span><em>value</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hpnRobot.html#Fluent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hpnRobot.Fluent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Base class for implementing fluents. Intaces of fluents represent the subset of states such as, for each possible state in that subset, the fluent with the given arguments has value equals to the value argument</p>
+<dl class="method">
+<dt id="hpnRobot.Fluent._loadVarArgs">
+<code class="descname">_loadVarArgs</code><span class="sig-paren">(</span><em>b</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hpnRobot.html#Fluent._loadVarArgs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hpnRobot.Fluent._loadVarArgs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for loading variable arguments</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hpnRobot.Fluent.kwargs">
+<code class="descname">kwargs</code><em class="property"> = None</em><a class="headerlink" href="#hpnRobot.Fluent.kwargs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dictionary of arguments</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hpnRobot.Fluent.value">
+<code class="descname">value</code><em class="property"> = None</em><a class="headerlink" href="#hpnRobot.Fluent.value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fluent value</p>
+</dd></dl>
+
+</dd></dl>
+
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<hr class="docutils" />
+<dl class="class">
+<dt id="hpnRobot.In">
+<em class="property">class </em><code class="descclassname">hpnRobot.</code><code class="descname">In</code><span class="sig-paren">(</span><em>value</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hpnRobot.html#In"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hpnRobot.In" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hpnRobot.Fluent" title="hpnRobot.Fluent"><code class="xref py py-class docutils literal"><span class="pre">hpnRobot.Fluent</span></code></a></p>
+<p>In(obj, R) fluent</p>
+<dl class="method">
+<dt id="hpnRobot.In._loadVarArgs">
+<code class="descname">_loadVarArgs</code><span class="sig-paren">(</span><em>b</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#hpnRobot.In._loadVarArgs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for loading variable arguments</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hpnRobot.In.holdsIn">
+<code class="descname">holdsIn</code><span class="sig-paren">(</span><em>b</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hpnRobot.html#In.holdsIn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hpnRobot.In.holdsIn" title="Permalink to this definition">¶</a></dt>
+<dd><p>T(In, b, obj, R)</p>
+</dd></dl>
+
+</dd></dl>
+
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<hr class="docutils" />
+<dl class="class">
+<dt id="hpnRobot.Overlaps">
+<em class="property">class </em><code class="descclassname">hpnRobot.</code><code class="descname">Overlaps</code><span class="sig-paren">(</span><em>value</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hpnRobot.html#Overlaps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hpnRobot.Overlaps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hpnRobot.Fluent" title="hpnRobot.Fluent"><code class="xref py py-class docutils literal"><span class="pre">hpnRobot.Fluent</span></code></a></p>
+<p>Overlaps(obj, R) fluent</p>
+<dl class="method">
+<dt id="hpnRobot.Overlaps._loadVarArgs">
+<code class="descname">_loadVarArgs</code><span class="sig-paren">(</span><em>b</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#hpnRobot.Overlaps._loadVarArgs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for loading variable arguments</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hpnRobot.Overlaps.holdsIn">
+<code class="descname">holdsIn</code><span class="sig-paren">(</span><em>b</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hpnRobot.html#Overlaps.holdsIn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hpnRobot.Overlaps.holdsIn" title="Permalink to this definition">¶</a></dt>
+<dd><p>T(Overlaps, b, obj, R)</p>
+</dd></dl>
+
+</dd></dl>
+
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<hr class="docutils" />
+<dl class="class">
+<dt id="hpnRobot.Clear">
+<em class="property">class </em><code class="descclassname">hpnRobot.</code><code class="descname">Clear</code><span class="sig-paren">(</span><em>value</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hpnRobot.html#Clear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hpnRobot.Clear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hpnRobot.Fluent" title="hpnRobot.Fluent"><code class="xref py py-class docutils literal"><span class="pre">hpnRobot.Fluent</span></code></a></p>
+<p>Clear(R, objs) fluent</p>
+<dl class="method">
+<dt id="hpnRobot.Clear._loadVarArgs">
+<code class="descname">_loadVarArgs</code><span class="sig-paren">(</span><em>b</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#hpnRobot.Clear._loadVarArgs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for loading variable arguments</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hpnRobot.Clear.holdsIn">
+<code class="descname">holdsIn</code><span class="sig-paren">(</span><em>b</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hpnRobot.html#Clear.holdsIn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hpnRobot.Clear.holdsIn" title="Permalink to this definition">¶</a></dt>
+<dd><p>T(Clear, b, R, objs)</p>
+</dd></dl>
+
+</dd></dl>
+
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<hr class="docutils" />
+<dl class="class">
+<dt id="hpnRobot.Holding">
+<em class="property">class </em><code class="descclassname">hpnRobot.</code><code class="descname">Holding</code><span class="sig-paren">(</span><em>value</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hpnRobot.html#Holding"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hpnRobot.Holding" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hpnRobot.Fluent" title="hpnRobot.Fluent"><code class="xref py py-class docutils literal"><span class="pre">hpnRobot.Fluent</span></code></a></p>
+<p>Holding(obj) fluent</p>
+<dl class="method">
+<dt id="hpnRobot.Holding._loadVarArgs">
+<code class="descname">_loadVarArgs</code><span class="sig-paren">(</span><em>b</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#hpnRobot.Holding._loadVarArgs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for loading variable arguments</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hpnRobot.Holding.holdsIn">
+<code class="descname">holdsIn</code><span class="sig-paren">(</span><em>b</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hpnRobot.html#Holding.holdsIn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hpnRobot.Holding.holdsIn" title="Permalink to this definition">¶</a></dt>
+<dd><p>T(Holding, b, obj)</p>
+</dd></dl>
+
+</dd></dl>
+
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<hr class="docutils" />
+<dl class="class">
+<dt id="hpnRobot.RecObject">
+<em class="property">class </em><code class="descclassname">hpnRobot.</code><code class="descname">RecObject</code><span class="sig-paren">(</span><em>length=0.2</em>, <em>width=0.1</em>, <em>x=0.1</em>, <em>y=0.05</em>, <em>theta=2</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hpnRobot.html#RecObject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hpnRobot.RecObject" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Rectangular representation of a object</p>
+<dl class="method">
+<dt id="hpnRobot.RecObject.isIn">
+<code class="descname">isIn</code><span class="sig-paren">(</span><em>reg</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hpnRobot.html#RecObject.isIn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hpnRobot.RecObject.isIn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return true if the object is entirely inside the region <em>reg</em></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hpnRobot.RecObject.l">
+<code class="descname">l</code><em class="property"> = None</em><a class="headerlink" href="#hpnRobot.RecObject.l" title="Permalink to this definition">¶</a></dt>
+<dd><p>length</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="hpnRobot.RecObject.overlaps">
+<code class="descname">overlaps</code><span class="sig-paren">(</span><em>reg</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hpnRobot.html#RecObject.overlaps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hpnRobot.RecObject.overlaps" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hpnRobot.RecObject.t">
+<code class="descname">t</code><em class="property"> = None</em><a class="headerlink" href="#hpnRobot.RecObject.t" title="Permalink to this definition">¶</a></dt>
+<dd><p>theta</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hpnRobot.RecObject.w">
+<code class="descname">w</code><em class="property"> = None</em><a class="headerlink" href="#hpnRobot.RecObject.w" title="Permalink to this definition">¶</a></dt>
+<dd><p>width</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hpnRobot.RecObject.x">
+<code class="descname">x</code><em class="property"> = None</em><a class="headerlink" href="#hpnRobot.RecObject.x" title="Permalink to this definition">¶</a></dt>
+<dd><p>x</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="hpnRobot.RecObject.y">
+<code class="descname">y</code><em class="property"> = None</em><a class="headerlink" href="#hpnRobot.RecObject.y" title="Permalink to this definition">¶</a></dt>
+<dd><p>y</p>
+</dd></dl>
+
+</dd></dl>
+
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<hr class="docutils" />
+<dl class="class">
+<dt id="hpnRobot.Agent">
+<em class="property">class </em><code class="descclassname">hpnRobot.</code><code class="descname">Agent</code><span class="sig-paren">(</span><em>world</em>, <em>goal</em>, <em>operators</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hpnRobot.html#Agent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hpnRobot.Agent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>Agent, the decision maker class</p>
+<dl class="method">
+<dt id="hpnRobot.Agent._bHPN">
+<code class="descname">_bHPN</code><span class="sig-paren">(</span><em>bnow</em>, <em>goal</em>, <em>abstLevel</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hpnRobot.html#Agent._bHPN"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hpnRobot.Agent._bHPN" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hpnRobot.Agent._bHPNTOp">
+<code class="descname">_bHPNTOp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/hpnRobot.html#Agent._bHPNTOp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hpnRobot.Agent._bHPNTOp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hpnRobot.Agent._nextLevel">
+<code class="descname">_nextLevel</code><span class="sig-paren">(</span><em>abstLevel</em>, <em>operator</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hpnRobot.html#Agent._nextLevel"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hpnRobot.Agent._nextLevel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hpnRobot.Agent._plan">
+<code class="descname">_plan</code><span class="sig-paren">(</span><em>bnow</em>, <em>goal</em>, <em>abstLevel</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hpnRobot.html#Agent._plan"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hpnRobot.Agent._plan" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hpnRobot.Agent._visit">
+<code class="descname">_visit</code><span class="sig-paren">(</span><em>preImage</em>, <em>searchedLeaf</em>, <em>abstLevel</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hpnRobot.html#Agent._visit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hpnRobot.Agent._visit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hpnRobot.Agent.go">
+<code class="descname">go</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/hpnRobot.html#Agent.go"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hpnRobot.Agent.go" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<div class="line-block">
+<div class="line"><br /></div>
+</div>
+<hr class="docutils" />
+<dl class="class">
+<dt id="hpnRobot.Robot">
+<em class="property">class </em><code class="descclassname">hpnRobot.</code><code class="descname">Robot</code><span class="sig-paren">(</span><em>world</em>, <em>goal</em>, <em>operators</em>, <em>length=0.5</em>, <em>width=0.5</em>, <em>x=0.25</em>, <em>y=0.25</em>, <em>theta=2</em>, <em>gripper=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/hpnRobot.html#Robot"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#hpnRobot.Robot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#hpnRobot.Agent" title="hpnRobot.Agent"><code class="xref py py-class docutils literal"><span class="pre">hpnRobot.Agent</span></code></a></p>
+<p>Representation of the robot</p>
+<dl class="method">
+<dt id="hpnRobot.Robot._bHPN">
+<code class="descname">_bHPN</code><span class="sig-paren">(</span><em>bnow</em>, <em>goal</em>, <em>abstLevel</em><span class="sig-paren">)</span><a class="headerlink" href="#hpnRobot.Robot._bHPN" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hpnRobot.Robot._bHPNTOp">
+<code class="descname">_bHPNTOp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hpnRobot.Robot._bHPNTOp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hpnRobot.Robot._nextLevel">
+<code class="descname">_nextLevel</code><span class="sig-paren">(</span><em>abstLevel</em>, <em>operator</em><span class="sig-paren">)</span><a class="headerlink" href="#hpnRobot.Robot._nextLevel" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hpnRobot.Robot._plan">
+<code class="descname">_plan</code><span class="sig-paren">(</span><em>bnow</em>, <em>goal</em>, <em>abstLevel</em><span class="sig-paren">)</span><a class="headerlink" href="#hpnRobot.Robot._plan" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hpnRobot.Robot._visit">
+<code class="descname">_visit</code><span class="sig-paren">(</span><em>preImage</em>, <em>searchedLeaf</em>, <em>abstLevel</em><span class="sig-paren">)</span><a class="headerlink" href="#hpnRobot.Robot._visit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="hpnRobot.Robot.go">
+<code class="descname">go</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#hpnRobot.Robot.go" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hpnRobot.Robot.gripper">
+<code class="descname">gripper</code><em class="property"> = None</em><a class="headerlink" href="#hpnRobot.Robot.gripper" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hpnRobot.Robot.l">
+<code class="descname">l</code><em class="property"> = None</em><a class="headerlink" href="#hpnRobot.Robot.l" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hpnRobot.Robot.t">
+<code class="descname">t</code><em class="property"> = None</em><a class="headerlink" href="#hpnRobot.Robot.t" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hpnRobot.Robot.w">
+<code class="descname">w</code><em class="property"> = None</em><a class="headerlink" href="#hpnRobot.Robot.w" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hpnRobot.Robot.x">
+<code class="descname">x</code><em class="property"> = None</em><a class="headerlink" href="#hpnRobot.Robot.x" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="hpnRobot.Robot.y">
+<code class="descname">y</code><em class="property"> = None</em><a class="headerlink" href="#hpnRobot.Robot.y" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Task planning.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Task planning using HPN in belief space 1.0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright 2016, José M MENDES FILHO.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.5.
+    </div>
+  </body>
+</html>

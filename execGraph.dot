@@ -1,0 +1,15 @@
+digraph execTree {
+	b_0 [label="b = {'C': True, 'B': True, 'D': False}", shape=box, color=blue]
+	b_1 [label="b = {'A': True, 'C': True, 'B': True, 'D': False}", shape=box, color=blue]
+	b_0 -> b_1[label="Op3"]
+	b_2 [label="b = {'A': True, 'C': True, 'B': True, 'D': False}", shape=box, color=blue]
+	b_1 -> b_2[label="Op1"]
+	b_3 [label="b = {'A': True, 'C': True, 'B': True, 'D': False}", shape=box, color=blue]
+	b_2 -> b_3[label="Op1"]
+	b_4 [label="b = {'A': True, 'C': True, 'B': True, 'D': True}", shape=box, color=blue]
+	b_3 -> b_4[label="Op1"]
+	b_5 [label="b = {'A': True, 'C': True, 'B': True, 'D': True}", shape=box, color=blue]
+	b_4 -> b_5[label="Op2"]
+	b_6 [label="b = {'A': True, 'C': True, 'B': True, 'E': True, 'D': True}", shape=box, color=blue]
+	b_5 -> b_6[label="Op2"]
+}
