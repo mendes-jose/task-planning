@@ -14,6 +14,12 @@ from collections import deque
 
 __version__ = '1.0.1'
 
+def merge_two_dicts(x, y):
+    '''Given two dicts, merge them into a new dict as a shallow copy.'''
+    z = x.copy()
+    z.update(y)
+    return z
+
 ###############################################################################
 # (Belief) state
 ###############################################################################
@@ -23,15 +29,13 @@ class BeliefState(object):
 	def __init__(self, shelfs, delivZones, objects, robots):
 		""" Constructor
 		"""
-		self._shelfs = shelfs
-		self._delivZones = delivZones
-		self._objects = objects
-		self._robots = robots
-		self.allCont = {}
-		self.allCont.update(self._shelfs)
-		self.allCont.update(self._delivZones)
-		self.allCont.update(self._objects)
-		self.allCont.update(self._robots)
+		self.shelfs = shelfs
+		self.delivZones = delivZones
+		self.objects = objects
+		self.robots = robots
+		self.allCont = merge_two_dicts(shelfs, delivZones)
+		self.allCont.update(objects)
+		self.allCont.update(robots)
 
 	def update(self, operator, observation):
 		""" Belief state estimator. Uses previous belief state, observation and operator to estimate the new belief state
@@ -124,7 +128,18 @@ class BClear(Fluent):
 
 		#knownObjs = [v for k, v in b.iteritems() if type(v) == type(Object())]
 
-		boolArr = [obj.overalps(self._argsDic['reg']) for obj in knownObjs if obj not in self._argsDic['listObjs']]
+		# check if that space is free in the space representation
+		# if not return False (the robot does not belief that the R is clear)
+
+		# else, if any of the objects in the objs list is not in b, it does
+		# not matter its a exeption list
+
+		# else, check if any of b obstacles that are not in objs overlaps
+		# R
+
+		boolArr = [obj.overalps(self._argsDic['reg']) for objID, objV in
+				merge_two_dicts(b.objects, b.robots).iteritems() if objID
+				not in self._argsDic['listObjs']]
 
 		return False if any(boolArr) else True
 
